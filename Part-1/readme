@@ -1,0 +1,18 @@
+FTP
+
+Client(Sender)
+1. Create a UDP Socket
+2. Map the entire file in the virtual address space using the mmap() - determine the file size using lseek operation
+3. Send info about the filesize to the server(reciever){by connecting and then writing to the socket} using TCP socket - as this carries info regarding the filesize which is very important and used in number of packets calculation and close the socket after that
+4. Create a thread which keeps monitoring if all the packets are recieved by the reciever(using NACKS), if the reciever asks for a particular packet resend it(UDP)
+5. In the main thread we would be sending the data by adding the data to the packet payload till seqNum == num_packets-1 which means all the data is sent
+6. Unmap the file from virtual address space and close the file pointer
+
+Server(Reciever)
+1. Create a UDP Socket
+2. Bind the socket to the port number
+3. Recieve the packet filesize info by using the TCP socket{bind,listen,accept,read} info regarding the filesize is read into filesize variable and close the tcp socket
+4. Create a new file in w+ mode and determine the num_packets required to obtain the entire file
+5. Create another thread to handle failures, if a callback is initiated; it basically checks if all the packets are recieved if not it will call getNackSeqNum() which will return the sequence number expected and makes a call to the send_nack_to_client()
+6. In the main thread, call the recieve packet(), he will be recieving from the sender we continuously stay in the loop untill all the packets are recieved
+7. Close the socket and file
